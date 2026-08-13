@@ -225,13 +225,13 @@
   .panel-head h3{margin:0;font-size:15px;}
   .panel-head .pill{background:rgba(255,255,255,.16);font-size:10.5px;font-weight:800;padding:4px 10px;border-radius:999px;display:flex;align-items:center;gap:4px;}
   .panel-body{padding:18px 20px;}
-  .panel-body .meta-row{display:flex;gap:16px;flex-wrap:wrap;margin:12px 0 14px;font-size:12px;color:var(--ink-soft);}
-  .panel-body .meta-row span{display:flex;align-items:center;gap:5px;font-weight:700;}
-  .panel-body .meta-row svg{width:13px;height:13px;stroke:var(--teal-700);flex-shrink:0;}
-  .panel-body h4{font-size:12.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--teal-700);margin:14px 0 6px;}
-  .panel-body p{font-size:13px;color:var(--ink-soft);line-height:1.5;margin:0 0 8px;}
-  .benef-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;}
-  .benef-list li{font-size:13px;color:var(--ink-soft);display:flex;gap:8px;}
+  .panel-body .meta-row{display:flex;gap:20px;flex-wrap:wrap;margin:12px 0 16px;font-size:14px;color:var(--ink-soft);}
+  .panel-body .meta-row span{display:flex;align-items:center;gap:7px;font-weight:700;}
+  .panel-body .meta-row svg{width:18px;height:18px;stroke:var(--teal-700);flex-shrink:0;}
+  .panel-body h4{font-size:13.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--teal-700);margin:16px 0 7px;}
+  .panel-body p{font-size:14.5px;color:var(--ink-soft);line-height:1.55;margin:0 0 8px;}
+  .benef-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:7px;}
+  .benef-list li{font-size:14.5px;color:var(--ink-soft);display:flex;gap:8px;}
   .benef-list li:before{content:"✓";color:var(--teal-600);font-weight:800;}
 
   .case-steps{display:flex;flex-direction:column;gap:0;}
@@ -317,9 +317,9 @@
   .modal-tab:hover{background:var(--teal-50);}
   .modal-tab.active{background:var(--teal-50);color:var(--teal-800);}
   .modal-content{flex:1;overflow-y:auto;padding:22px 26px;}
-  .modal-content h4{font-size:12.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--teal-700);margin:18px 0 6px;}
+  .modal-content h4{font-size:13.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--teal-700);margin:18px 0 7px;}
   .modal-content h4:first-child{margin-top:0;}
-  .modal-content p{font-size:13.5px;color:var(--ink-soft);line-height:1.55;margin:0 0 4px;}
+  .modal-content p{font-size:14.5px;color:var(--ink-soft);line-height:1.6;margin:0 0 4px;}
   .modal-content .not-informed{color:var(--muted);font-style:italic;}
   .curadoria-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px;}
   .curadoria-item{background:var(--teal-50);border-radius:12px;padding:12px 14px;}
@@ -457,7 +457,7 @@
             <div class="why-item"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>Inspire outras franquias</div>
             <div class="why-item"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>Acelere a inovação na rede</div>
             <div class="why-item"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg></span>Gere mais valor aos clientes</div>
-            <div class="why-item"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>Fortaleça nossa cultura TODOS por TODOS</div>
+            <div class="why-item"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>Fortaleça a nossa cultura TODOS por TODOS</div>
           </div>
         </div>
         <div class="box">
@@ -942,7 +942,7 @@ function renderHomeSplit(){
   const icoTag = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 12 2h8v8L10 20a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8Z"/><circle cx="15.5" cy="6.5" r="1"/></svg>';
   const icoTools = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L2 19l3 3 7.3-7.3a4 4 0 0 0 5.4-5.4l-2.8 2.8-2-2 2.8-2.8Z"/></svg>';
   const icoClock = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>';
-  const icoCoin = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.3 9.3c0-1.1 1.2-2 2.7-2s2.7.8 2.7 1.9c0 2.5-5.4 1.4-5.4 3.9 0 1.1 1.2 1.9 2.7 1.9s2.7-1 2.7-2.1"/></svg>';
+  const icoCoin = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2.5"/><circle cx="12" cy="12" r="2.2"/><path d="M6 12h.01M18 12h.01"/></svg>';
   el.innerHTML = `
     <div class="panel">
       <div class="panel-head">

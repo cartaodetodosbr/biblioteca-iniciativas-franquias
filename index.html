@@ -573,8 +573,8 @@
       <button class="modal-close" id="infoCloseBtn">✕</button>
     </div>
     <div class="modal-content">
-      <p>Para compartilhar sua iniciativa,
-      utilize o <b>Portal de Iniciativas Digitais</b>.</p>
+      <p>Nesta primeira versão, a Biblioteca ainda não recebe cadastros diretamente. Para compartilhar sua iniciativa,
+      utilize o <b>Portal de Iniciativas Digitais</b> já existente — o mesmo formulário usado hoje pela sua franquia.</p>
       <a class="go-btn" id="goPortalBtn" href="#" target="_blank" rel="noopener">Abrir Portal de Iniciativas</a>
     </div>
   </div>
@@ -600,170 +600,26 @@ const DESTAQUE_HOME_MAX = 6;
 /* =====================================================================
    2. CARREGAMENTO — ponto único de integração com a fonte real
    ---------------------------------------------------------------------
-   PREVIEW_DATA abaixo é uma AMOSTRA temporária de 5 iniciativas (uma por
-   Regional), isolada nesta constante porque ainda não há, nesta sessão,
-   acesso ao endpoint real "Buscar Iniciativas" (Power Automate) que já
-   lê a lista Iniciativas_Franquias no SharePoint. Nenhum nome de
-   franquia, resultado ou indicador aqui é inventado como se fosse um
-   caso real fora desta amostra.
-
-   Os nomes de campo usados abaixo (situacao, solucao, beneficios,
-   potencial_replicacao, status_curadoria, categoria_oficial, e os 12
-   campos "case_*") espelham os nomes já confirmados/criados na lista
-   Iniciativas_Franquias do SharePoint (ver documentação de arquitetura
-   do projeto). status_case é o novo campo de controle da Biblioteca.
+   Nenhum dado de demonstração é mantido neste arquivo. Enquanto a
+   integração real (mesmo endpoint "Buscar Iniciativas" já usado pela
+   Central de Curadoria, que lê Iniciativas_Franquias no SharePoint) não
+   é conectada, getIniciativas() devolve uma lista vazia — a interface já
+   está preparada para isso (estado vazio, contadores em zero, gráficos
+   com mensagem neutra).
 
    INTEGRAÇÃO FUTURA: a ÚNICA função que precisa mudar é getIniciativas()
    logo abaixo — o resto do pipeline (normalização, elegibilidade,
-   filtros, cards, modal) já funciona sobre qualquer array que siga este
-   mesmo formato de campos.
+   filtros, cards, modal) já funciona sobre qualquer array que siga o
+   formato de campos já usado na Central de Curadoria (situacao, solucao,
+   beneficios, potencial_replicacao, status_case, os 12 campos "case_*"
+   etc.). Basta que cada item tenha esses mesmos nomes de campo.
    ===================================================================== */
-const PREVIEW_DATA = [
-  {
-    id: "demo-001",
-    nome_projeto: "Dashboard de Performance Comercial",
-    nome_franquia: "Franquia São José",
-    regional: "Regional Centro Sul",
-    tipo_franquia: "CDT",
-    categoria_oficial: "Gestão Comercial",
-    categoria_negocio: "Vendas",
-    ferramentas: ["Power BI", "Excel"],
-    objetivo: "Dar visibilidade diária dos indicadores comerciais para toda a equipe de vendas.",
-    situacao: "A tomada de decisão comercial era baseada em planilhas manuais atualizadas semanalmente, com informações que já chegavam desatualizadas aos gestores.",
-    impacto_operacao: "Gerava retrabalho para consolidar números, atrasava a identificação de quedas de performance e dificultava o acompanhamento de metas por vendedor.",
-    solucao: "Criação de um dashboard integrado no Power BI, conectado às planilhas de vendas, atualizado automaticamente e acessível para toda a equipe comercial.",
-    areas_envolvidas: ["Comercial", "Operações"],
-    investimento: "Baixo",
-    tempo_implementacao: "4 semanas",
-    beneficios: ["Redução de 70% no tempo de consolidação dos dados", "Mais agilidade e precisão na tomada de decisão", "Acompanhamento diário de metas e resultados"],
-    indicadores: ["Tempo de consolidação de dados", "Cumprimento de metas comerciais"],
-    resultados_mensuraveis: "Tempo de consolidação do relatório semanal caiu de aproximadamente 5h para menos de 1h30.",
-    potencial_replicacao: "Alto",
-    status_curadoria: "Validada",
-    nota_reconhecimento: 5,
-    data_cadastro: "2026-03-10",
-    // Case estruturado (12 campos já criados na Etapa 2A do projeto).
-    status_case: "Pronto para Biblioteca",
-    case_situacao_motivo: "A tomada de decisão comercial era baseada em planilhas manuais atualizadas semanalmente, com informações que já chegavam desatualizadas aos gestores.",
-    case_situacao_impacto: "Gerava retrabalho para consolidar números, atrasava a identificação de quedas de performance e dificultava o acompanhamento de metas por vendedor.",
-    case_requer_investimento: "Não",
-    case_investimentos_desc: null,
-    case_como_implementado: "Criação de um dashboard integrado no Power BI, conectado às planilhas de vendas, atualizado automaticamente e acessível para toda a equipe comercial.",
-    case_ferramentas_utilizadas: "Power BI, Excel",
-    case_areas_envolvidas: "Comercial, Operações",
-    case_beneficios_obtidos: "Redução de 70% no tempo de consolidação dos dados; mais agilidade e precisão na tomada de decisão; acompanhamento diário de metas e resultados.",
-    case_resultados_mensuraveis: "Tempo de consolidação do relatório semanal caiu de aproximadamente 5h para menos de 1h30.",
-    case_cuidados_recomendados: "Garantir que a base de vendas usada pelo Power BI esteja sempre atualizada antes de divulgar os números para a equipe.",
-    case_pre_requisito: "Acesso ao Power BI e uma planilha de vendas padronizada como fonte de dados.",
-    case_materiais_apoio: null
-  },
-  {
-    id: "demo-002",
-    nome_projeto: "Automação de Cobrança via WhatsApp",
-    nome_franquia: "Franquia Campinas",
-    regional: "Regional Interior",
-    tipo_franquia: "AS",
-    categoria_oficial: "Automação de Processos",
-    categoria_negocio: "Adimplência",
-    ferramentas: ["Power Automate", "WhatsApp"],
-    objetivo: "Reduzir a inadimplência por meio de lembretes automáticos de cobrança.",
-    situacao: "A cobrança de clientes em atraso era feita manualmente por telefone, consumindo tempo do time financeiro e gerando inconsistência no contato.",
-    impacto_operacao: "Atrasava o fluxo de caixa da unidade e sobrecarregava a equipe responsável pela régua de cobrança.",
-    solucao: "Automatização do envio de mensagens de cobrança via WhatsApp, integrada ao CRM, com régua de mensagens por dias de atraso.",
-    areas_envolvidas: ["Financeiro", "Atendimento"],
-    investimento: "Baixo",
-    tempo_implementacao: "3 semanas",
-    beneficios: ["Padronização do processo de cobrança", "Redução do tempo da equipe dedicado à cobrança manual", "Contato mais rápido com o cliente em atraso"],
-    indicadores: ["Taxa de inadimplência", "Tempo médio até o primeiro contato"],
-    resultados_mensuraveis: null,
-    potencial_replicacao: "Alto",
-    status_curadoria: "Validada",
-    nota_reconhecimento: 4,
-    data_cadastro: "2026-02-22",
-    status_case: "Pronto para Biblioteca"
-  },
-  {
-    id: "demo-003",
-    nome_projeto: "Controle Inteligente de Renovações",
-    nome_franquia: "Franquia Vitória",
-    regional: "Regional Costa Leste",
-    tipo_franquia: "CDT",
-    categoria_oficial: "Gestão de Contratos",
-    categoria_negocio: "Retenção",
-    ferramentas: ["Power Automate", "Excel"],
-    objetivo: "Antecipar renovações de contrato para reduzir o cancelamento por esquecimento.",
-    situacao: "Contratos próximos do vencimento eram identificados manualmente, muitas vezes já perto ou depois da data limite.",
-    impacto_operacao: "Gerava cancelamentos evitáveis e perda de receita recorrente.",
-    solucao: "Fluxo automatizado que identifica contratos a vencer e antecipa o contato com o cliente, com alertas para a equipe responsável.",
-    areas_envolvidas: ["Atendimento", "Financeiro"],
-    investimento: "Baixo",
-    tempo_implementacao: "5 semanas",
-    beneficios: ["Redução de cancelamentos por esquecimento", "Mais previsibilidade de receita recorrente"],
-    indicadores: ["Taxa de renovação de contratos"],
-    resultados_mensuraveis: null,
-    potencial_replicacao: "Alto",
-    status_curadoria: "Validada",
-    nota_reconhecimento: 4,
-    data_cadastro: "2026-01-18",
-    status_case: "Pronto para Biblioteca"
-  },
-  {
-    id: "demo-004",
-    nome_projeto: "Pesquisa de Satisfação Pós Atendimento",
-    nome_franquia: "Franquia Belém",
-    regional: "Regional Equatorial",
-    tipo_franquia: "AS",
-    categoria_oficial: "Experiência do Cliente",
-    categoria_negocio: "Reputação",
-    ferramentas: ["Forms", "Power BI"],
-    objetivo: "Medir a satisfação do cliente logo após o atendimento para gerar planos de ação rápidos.",
-    situacao: "Não havia um processo estruturado de escuta do cliente após o atendimento — o feedback só chegava, informalmente, quando havia reclamação.",
-    impacto_operacao: "Problemas recorrentes de atendimento só eram percebidos tardiamente, quando já haviam impactado vários clientes.",
-    solucao: "Pesquisa automática enviada após cada atendimento, com painel consolidando as respostas e gerando alertas para notas baixas.",
-    areas_envolvidas: ["Atendimento", "Qualidade"],
-    investimento: "Baixo",
-    tempo_implementacao: "3 semanas",
-    beneficios: ["Visibilidade contínua da satisfação do cliente", "Planos de ação mais rápidos para notas baixas"],
-    indicadores: ["Nota média de satisfação (CSAT)"],
-    resultados_mensuraveis: null,
-    potencial_replicacao: "Alto",
-    status_curadoria: "Validada",
-    nota_reconhecimento: 5,
-    data_cadastro: "2026-04-02",
-    status_case: "Pronto para Biblioteca"
-  },
-  {
-    id: "demo-005",
-    nome_projeto: "Painel de Indicadores de Pessoas",
-    nome_franquia: "Franquia Ribeirão Preto",
-    regional: "Regional SPMG",
-    tipo_franquia: "CDT",
-    categoria_oficial: "Gestão de Pessoas",
-    categoria_negocio: "Outras",
-    ferramentas: ["Power BI", "SharePoint"],
-    objetivo: "Consolidar indicadores de turnover, absenteísmo e clima em um único painel.",
-    situacao: "Os indicadores de pessoas ficavam espalhados em planilhas isoladas, atualizadas por pessoas diferentes e sem padronização.",
-    impacto_operacao: "Dificultava a leitura consolidada da saúde do time e o acompanhamento de tendências pela liderança da unidade.",
-    solucao: "Painel único integrando as bases de RH da franquia, com atualização automática e visão histórica dos principais indicadores de pessoas.",
-    areas_envolvidas: ["Pessoas e Cultura"],
-    investimento: "Médio",
-    tempo_implementacao: "6 semanas",
-    beneficios: ["Visão única e histórica dos indicadores de pessoas", "Mais agilidade para identificar tendências de turnover"],
-    indicadores: ["Turnover mensal", "Absenteísmo"],
-    resultados_mensuraveis: null,
-    potencial_replicacao: "Alto",
-    status_curadoria: "Validada",
-    nota_reconhecimento: 4,
-    data_cadastro: "2026-05-14",
-    status_case: "Pronto para Biblioteca"
-  }
-];
 
 /**
- * Camada de carregamento (RAW_DATA). Hoje devolve PREVIEW_DATA sem
- * nenhum filtro — a decisão de quem entra na Biblioteca é feita
- * inteiramente por elegivelParaBiblioteca(), não aqui, para não duplicar
- * a regra de negócio em dois lugares.
+ * Camada de carregamento (RAW_DATA). Hoje devolve uma lista vazia —
+ * nenhum Case de demonstração é exibido. A decisão de quem entra na
+ * Biblioteca é feita inteiramente por elegivelParaBiblioteca(), não
+ * aqui, para não duplicar a regra de negócio em dois lugares.
  *
  * INTEGRAÇÃO FUTURA (sugestão): substituir o corpo por algo como
  *   const res = await fetch(API_BUSCAR_INICIATIVA_URL);
@@ -772,20 +628,18 @@ const PREVIEW_DATA = [
  * nenhuma outra função deste arquivo precisa mudar.
  */
 async function getIniciativas(){
-  return PREVIEW_DATA;
+  return [];
 }
 
 /* =====================================================================
    3. NORMALIZAÇÃO + REGRAS DE ELEGIBILIDADE
    ---------------------------------------------------------------------
    Função única e centralizada que decide o que pode aparecer na
-   Biblioteca — respeita o ciclo completo do projeto: só é considerado
-   publicado quando a Curadoria já validou a iniciativa (Status da
-   Curadoria = Validada) E o Case correspondente já foi revisado e
-   liberado (StatusCase = Pronto para Biblioteca). Nenhuma das duas
-   condições isoladas é suficiente. A Biblioteca é somente leitura: não
-   cria, não edita Curadoria e não altera StatusCase — apenas consome
-   o resultado já decidido em outra etapa do processo.
+   Biblioteca. A Curadoria já revisou o Case e o auditor já definiu
+   StatusCase = "Pronto para Biblioteca" — a Biblioteca não toma nenhuma
+   decisão adicional, não exige nenhuma outra condição, apenas lê esse
+   campo. A Biblioteca é somente leitura: não cria, não edita Curadoria
+   e não altera StatusCase.
    ===================================================================== */
 function normalizeTxt(v){
   return (v===undefined||v===null) ? "" : String(v).trim().toLowerCase();
@@ -793,7 +647,7 @@ function normalizeTxt(v){
 
 function elegivelParaBiblioteca(item){
   if(!item) return false;
-  return normalizeTxt(item.status_curadoria) === "validada" && normalizeTxt(item.status_case) === "pronto para biblioteca";
+  return normalizeTxt(item.status_case) === "pronto para biblioteca";
 }
 
 // Um Case é "Estruturado" quando já tem conteúdo em pelo menos um dos

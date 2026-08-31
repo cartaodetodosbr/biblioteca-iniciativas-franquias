@@ -590,6 +590,12 @@ const CONFIG = {
 };
 
 const REGIONAIS_OFICIAIS = ["Regional SPMG","Regional Costa Leste","Regional Interior","Regional Centro Sul","Regional Equatorial"];
+// Taxonomia fixa usada apenas em testes locais anteriores (dados de
+// demonstração). A fonte real usa a Categoria Oficial já definida pela
+// Curadoria, que não segue esse conjunto fechado — por isso as telas de
+// categoria (Home, Dashboard, filtro, página Categorias) usam
+// categoriasPresentes() abaixo, derivada dinamicamente dos Cases reais,
+// em vez desta lista. Mantida aqui só para referência histórica.
 const CATEGORIAS_NEGOCIO = ["Vendas","Retenção","Adimplência","Cashback","Reputação","Outras"];
 
 // Quantos itens mostrar por página na Biblioteca completa, e quantos exibir
@@ -600,35 +606,41 @@ const DESTAQUE_HOME_MAX = 6;
 /* =====================================================================
    2. CARREGAMENTO — ponto único de integração com a fonte real
    ---------------------------------------------------------------------
-   Nenhum dado de demonstração é mantido neste arquivo. Enquanto a
-   integração real (mesmo endpoint "Buscar Iniciativas" já usado pela
-   Central de Curadoria, que lê Iniciativas_Franquias no SharePoint) não
-   é conectada, getIniciativas() devolve uma lista vazia — a interface já
-   está preparada para isso (estado vazio, contadores em zero, gráficos
-   com mensagem neutra).
-
-   INTEGRAÇÃO FUTURA: a ÚNICA função que precisa mudar é getIniciativas()
-   logo abaixo — o resto do pipeline (normalização, elegibilidade,
-   filtros, cards, modal) já funciona sobre qualquer array que siga o
-   formato de campos já usado na Central de Curadoria (situacao, solucao,
-   beneficios, potencial_replicacao, status_case, os 12 campos "case_*"
-   etc.). Basta que cada item tenha esses mesmos nomes de campo.
+   Fonte real conectada: fluxo dedicado "Biblioteca - Buscar Cases"
+   (Power Automate), criado no Gate 5 especificamente para a Biblioteca —
+   não é o mesmo endpoint da Central de Curadoria. Esse fluxo já filtra
+   no servidor (StatusCase = "Pronto para Biblioteca") e já devolve
+   somente os campos públicos aprovados (nunca StatusCase, Status geral,
+   parecer, revisor ou nota de reconhecimento) — testado e confirmado
+   no Gate 5.
    ===================================================================== */
+const BIBLIOTECA_CASES_ENDPOINT =
+  "https://defaulte93279240f9745ba871f4a124f3343.19.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/18/workflows/6dbbdf6ea13d440cb9173929dcf72459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Rh26sy7mQYRB6mwuTaN5j2Cx6ck9ERDFnE8UkZaI3a4";
 
 /**
- * Camada de carregamento (RAW_DATA). Hoje devolve uma lista vazia —
- * nenhum Case de demonstração é exibido. A decisão de quem entra na
- * Biblioteca é feita inteiramente por elegivelParaBiblioteca(), não
- * aqui, para não duplicar a regra de negócio em dois lugares.
- *
- * INTEGRAÇÃO FUTURA (sugestão): substituir o corpo por algo como
- *   const res = await fetch(API_BUSCAR_INICIATIVA_URL);
- *   return await res.json();
- * reaproveitando o mesmo endpoint já usado pela Central de Curadoria —
- * nenhuma outra função deste arquivo precisa mudar.
+ * Camada de carregamento (RAW_DATA). Busca os Cases já publicados no
+ * fluxo dedicado da Biblioteca. Em qualquer falha (rede indisponível,
+ * resposta inesperada, erro do servidor), devolve uma lista vazia — a
+ * interface já está preparada para isso (estado vazio, contadores em
+ * zero, gráficos com mensagem neutra). Nunca usa dado fictício como
+ * substituto de uma falha de rede.
  */
 async function getIniciativas(){
-  return [];
+  try{
+    const res = await fetch(BIBLIOTECA_CASES_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}"
+    });
+    if(!res.ok) return [];
+    const data = await res.json();
+    if(Array.isArray(data)) return data;
+    if(data && Array.isArray(data.value)) return data.value;
+    return [];
+  }catch(err){
+    console.warn("Biblioteca: não foi possível carregar os Cases agora.", err);
+    return [];
+  }
 }
 
 /* =====================================================================
@@ -645,9 +657,16 @@ function normalizeTxt(v){
   return (v===undefined||v===null) ? "" : String(v).trim().toLowerCase();
 }
 
+// A decisão de publicação (StatusCase = "Pronto para Biblioteca") já é
+// aplicada no servidor, pelo Filter Query do fluxo "Biblioteca - Buscar
+// Cases" (Gate 5, testado). Por decisão de segurança do próprio projeto,
+// o StatusCase nunca é devolvido ao portal público — então esta função
+// não pode (e não deve) reavaliar esse campo aqui. Ela permanece como
+// camada de defesa estrutural: garante que só chega à tela um registro
+// com identificação mínima válida, nunca decide "quem é publicável".
 function elegivelParaBiblioteca(item){
   if(!item) return false;
-  return normalizeTxt(item.status_case) === "pronto para biblioteca";
+  return Boolean(item.id) && Boolean(campoTexto(item.nome_projeto));
 }
 
 // Um Case é "Estruturado" quando já tem conteúdo em pelo menos um dos
@@ -663,12 +682,30 @@ function classificarModeloCase(item){
   return camposCase.some(v => v && String(v).trim()) ? "Estruturado" : "Legado";
 }
 
+// Traduz o formato devolvido pelo fluxo "Biblioteca - Buscar Cases" para
+// os nomes já usados internamente em todo o resto do arquivo — único
+// ponto de tradução, para não espalhar `raw.franquia` x `nome_franquia`
+// por todas as funções de render. Se um campo já vier com o nome
+// interno (ex.: em testes locais), ele é respeitado e não sobrescrito.
+function adaptarRegistroApi(raw){
+  if(!raw) return raw;
+  return {
+    ...raw,
+    nome_franquia: raw.nome_franquia || raw.franquia,
+    categoria_negocio: raw.categoria_negocio || raw.categoria_oficial,
+    ferramentas: (raw.ferramentas && raw.ferramentas.length) ? raw.ferramentas : listaTexto(raw.ferramentas_chips),
+    indicadores: (raw.indicadores && raw.indicadores.length) ? raw.indicadores : listaTexto(raw.indicadores_chips),
+    beneficios: (raw.beneficios && raw.beneficios.length) ? raw.beneficios : listaTexto(raw.beneficios_chips)
+  };
+}
+
 // Normaliza um registro cru (independente da fonte) para o formato
 // interno usado por toda a Biblioteca — único lugar que calcula
 // elegibilidade e modelo do Case, evitando lógica duplicada.
 function normalizarCase(item){
   if(!item) return null;
-  return { ...item, _elegivel: elegivelParaBiblioteca(item), _modelo: classificarModeloCase(item) };
+  const adaptado = adaptarRegistroApi(item);
+  return { ...adaptado, _elegivel: elegivelParaBiblioteca(adaptado), _modelo: classificarModeloCase(adaptado) };
 }
 
 /* =====================================================================
@@ -685,6 +722,14 @@ let filters = { q:"", regional:"Todas", categoria:"Todas", ferramenta:"Todas", t
    5. HELPERS
    ===================================================================== */
 function uniqueSorted(arr){ return [...new Set(arr)].sort((a,b)=>a.localeCompare(b,'pt-BR')); }
+
+// Categorias exibidas na Home, no filtro e na página Categorias — sempre
+// derivadas dos Cases já carregados (mesmo padrão usado para Ferramentas
+// e Regionais), nunca de uma lista fixa. Reflete exatamente a Categoria
+// Oficial já definida pela Curadoria, sem inventar nenhuma categoria nova.
+function categoriasPresentes(){
+  return uniqueSorted(ALL_INICIATIVAS.map(i=>i.categoria_negocio).filter(Boolean));
+}
 
 function esc(s){
   if(s===undefined||s===null) return "";
@@ -832,7 +877,7 @@ function contarPorChave(lista, getKey){
 
 function dadosPorCategoria(){
   const counts = contarPorChave(ALL_INICIATIVAS, i=>i.categoria_negocio);
-  return CATEGORIAS_NEGOCIO
+  return categoriasPresentes()
     .map(c => ({ label: c, count: counts[c]||0 }))
     .sort((a,b) => b.count - a.count || a.label.localeCompare(b.label,'pt-BR'));
 }
@@ -898,12 +943,13 @@ function renderDashboards(){
 }
 
 function renderHomeCatPills(){
+  const categorias = categoriasPresentes();
   const counts = {};
-  CATEGORIAS_NEGOCIO.forEach(c=>counts[c]=0);
+  categorias.forEach(c=>counts[c]=0);
   ALL_INICIATIVAS.forEach(i=>{ if(counts[i.categoria_negocio]!==undefined) counts[i.categoria_negocio]++; });
   const el = document.getElementById("homeCatPills");
   if(!el) return;
-  el.innerHTML = CATEGORIAS_NEGOCIO.map(c=>`<button class="cat-pill" data-goto-categoria="${esc(c)}">${esc(c)}<span class="n">${counts[c]}</span></button>`).join("");
+  el.innerHTML = categorias.map(c=>`<button class="cat-pill" data-goto-categoria="${esc(c)}">${esc(c)}<span class="n">${counts[c]}</span></button>`).join("");
 }
 
 /* =====================================================================
@@ -918,7 +964,7 @@ function populateFilterOptions(){
   const ferramentas = uniqueSorted(ALL_INICIATIVAS.flatMap(i=>i.ferramentas||[]));
 
   regionalSel.innerHTML = ['Todas', ...REGIONAIS_OFICIAIS.filter(r=>regionaisPresentes.includes(r))].map(r=>`<option>${esc(r)}</option>`).join("");
-  categoriaSel.innerHTML = ['Todas', ...CATEGORIAS_NEGOCIO].map(c=>`<option>${esc(c)}</option>`).join("");
+  categoriaSel.innerHTML = ['Todas', ...categoriasPresentes()].map(c=>`<option>${esc(c)}</option>`).join("");
   ferramentaSel.innerHTML = ['Todas', ...ferramentas].map(f=>`<option>${esc(f)}</option>`).join("");
 }
 
@@ -955,7 +1001,7 @@ function limparFiltros(){
    11. RENDER: Categorias / Regionais
    ===================================================================== */
 function renderCategorias(){
-  const html = CATEGORIAS_NEGOCIO.map(c=>{
+  const html = categoriasPresentes().map(c=>{
     const items = ALL_INICIATIVAS.filter(i=>i.categoria_negocio===c);
     const tools = uniqueSorted(items.flatMap(i=>i.ferramentas||[])).slice(0,4);
     return `<div class="tile" data-goto-categoria="${esc(c)}">
@@ -965,7 +1011,7 @@ function renderCategorias(){
       ${tools.length ? `<div class="tools-line">${tools.map(t=>`<span class="chip">${esc(t)}</span>`).join("")}</div>` : ""}
     </div>`;
   }).join("");
-  document.getElementById("categoriaGrid").innerHTML = html;
+  document.getElementById("categoriaGrid").innerHTML = html || emptyStateHtml("vazio");
 }
 
 function renderRegionais(){
